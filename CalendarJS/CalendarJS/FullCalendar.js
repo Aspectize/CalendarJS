@@ -7,10 +7,12 @@ Aspectize.Extend("FullCalendar", {
 
     Binding: 'GridBinding',
 
-    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'fr', View: 'month', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00' },
-    Events: ['OnPropertyChanged', 'OnNewEvent', 'OnNeedEvents'],
+    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'fr', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00' },
+    Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent'],
 
     Init: function (elem, controlInfo) {
+
+        elem.aasEventCells = {};
 
         var editMode = Aspectize.UiExtensions.GetProperty(elem, 'EditMode');
         var viewMode = Aspectize.UiExtensions.GetProperty(elem, 'View');
@@ -66,68 +68,10 @@ Aspectize.Extend("FullCalendar", {
 
             locale: Aspectize.UiExtensions.GetProperty(elem, 'Locale'),
             nowIndicator: true,
-            height: 'parent',
+            height: '100%',
 
             eventOrder: eventSort,
             eventOrderStrict: true,
-
-            dateClick: function (info) {
-                /*
-                alert('Clicked on: ' + info.dateStr);
-                alert('Coordinates: ' + info.jsEvent.pageX + ',' + info.jsEvent.pageY);
-                alert('Current view: ' + info.view.type);
-                */
-                // change the day's background color just for fun
-                info.dayEl.style.backgroundColor = 'red';
-            },
-
-            eventClick: function (arg) {
-                if (confirm('Are you sure you want to delete this event?')) {
-                    arg.event.remove()
-                }
-            },
-
-            events: function (fetchInfo, successCallback, failureCallback) {
-
-
-                count++;
-                var events = fcObj ? fcObj.getEvents() : [];
-                var x = {
-                    id: '#x' + count,
-                    allDay: false,
-                    start: new Date(2023, 11, 22, 17 - count, 30),
-                    end: new Date(2023, 11, 22, 22, 30),
-                    title: 'Fredy ' + count,
-
-                    editable: true,
-
-                    className: 'x',
-                    backgroundColor: 'red',
-                    borderColor: 'blue',
-                    textColor: 'white'
-                };
-
-                var y = {
-                    id: '#y' + count,
-                    allDay: true,
-                    start: new Date(2023, 11, 22 - count),
-                    end: new Date(2023, 11, 22),
-                    title: 'Fredy y ' + count,
-
-                    editable: true,
-
-                    className: 'y',
-
-                    backgroundColor: 'yellow',
-                    borderColor: 'blue',
-                    textColor: 'black'
-                };
-
-                events.push(x);
-                events.push(y);
-
-                if (successCallback) successCallback(events);
-            },
 
             eventContent: function (arg) {
 
@@ -140,86 +84,63 @@ Aspectize.Extend("FullCalendar", {
         function fSelect(arg) {
 
             var eventData = {
-                title: null,
                 start: sarg.start,
                 end: arg.end
             };
 
             Aspectize.UiExtensions.Notify(elem, 'OnNewEvent', eventData);
-
-            //fcObj.fullCalendar('unselect');
         }
         if (fcOptions.selectable) fcOptions.select = fSelect;
+        //#endregion
+
+        //#region OnNeedEvents
+        function needEvents(fetchInfo, successCallback, failureCallback) {
+
+            var eventData = {
+                start: fetchInfo.start,
+                end: fetchInfo.end
+            };
+
+            Aspectize.UiExtensions.Notify(elem, 'OnNeedEvents', eventData);
+
+            if (successCallback) {
+                var events = fcObj ? fcObj.getEvents() : [];
+                successCallback(events);
+            }
+        }
+        fcOptions.events = needEvents;
+        //#endregion
+
+        //#region EventColumn events 
+        //#region OnEventChanged
+        fcOptions.eventResize = function (arg) {
+
+            var evt = arg.event;
+            var eventCell = elem.aasEventCells[evt.id];
+
+            var startDelta = arg.startDelta;
+            var endDelta = arg.endDelta;
+
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, StartDelta: startDelta, EndDelta: endDelta, CancelChange: null });
+
+        };
+        //#endregion
+
+        //#region OnEventClick
+        fcOptions.eventClick = function (arg) {
+            var evt = arg.event;
+            var eventCell = elem.aasEventCells[evt.id];
+
+            Aspectize.UiExtensions.SetCurrent(elem, evt.id);
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventClick', { Id: evt.id, Event: evt, DomEvent: '' });
+        };
+        //#endregion
         //#endregion
 
         var fcObj = new FullCalendar.Calendar(elem, fcOptions);
         fcObj.render();
 
-
-        elem.aasEventCells = {};
-
-
-
-
-
-        //function fEventResize(evt, delta, revertFunc, jsEvent, ui, view) {
-
-        //    var eventCell = elem.aasEventCells[evt.id];
-
-        //    var sstart = evt.start.local().toString();
-        //    var send = evt.end.local().toString();
-        //    var sdelta = delta.toString();
-
-        //    var end = evt.end.local().toDate();
-
-        //    var m = evt.start.local().toString() + ' - ';
-
-        //    m += (evt.end ? evt.end.local().toString() : 'no end') + ' - ';
-        //    m += delta.toString();
-
-        //    Aspectize.UiExtensions.ChangeProperty(eventCell, 'End', end);
-        //    Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, CancelChange: revertFunc });
-        //};
-        //if (fcOptions.durationEditable) fcOptions.eventResize = fEventResize;
-
-        //function fEventDrop(evt, delta, revertFunc, jsEvent, ui, view) {
-
-        //    var eventCell = elem.aasEventCells[evt.id];
-
-        //    var start = evt.start.local().toDate();
-        //    Aspectize.UiExtensions.ChangeProperty(eventCell, 'Start', start);
-
-        //    if (evt.end) {
-        //        var end = evt.end.local().toDate();
-
-        //        Aspectize.UiExtensions.ChangeProperty(eventCell, 'End', end);
-        //    }
-
-        //    Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, CancelChange: revertFunc });
-        //};
-        //if (fcOptions.startEditable) fcOptions.eventDrop = fEventDrop;
-
-        //fcOptions.eventClick = function (evt, jsEvent, view) {
-
-        //    var eventCell = elem.aasEventCells[evt.id];
-        //    Aspectize.UiExtensions.SetCurrent(elem, evt.id);
-
-        //    Aspectize.UiExtensions.Notify(eventCell, 'OnEventClick', { Id: evt.id, Event: evt, DomEvent: jsEvent });
-        //};
-
-        //fcOptions.eventMouseover = function (evt, jsEvent, view) {
-
-        //    var eventCell = elem.aasEventCells[evt.id];
-
-        //    Aspectize.UiExtensions.Notify(eventCell, 'OnEventMouseOver', { Id: evt.id, Event: evt });
-        //};
-
-        //fcOptions.viewRender = function (view, element) {
-
-        //    var arg = { start: view.intervalStart.local().toDate(), end: view.intervalEnd.local().toDate() };
-
-        //    Aspectize.UiExtensions.Notify(elem, 'OnNeedEvents', arg);
-        //};
+        elem.aasFcObj = fcObj;
 
         controlInfo.StartRender = function (control, rowCount) {
 
@@ -234,53 +155,60 @@ Aspectize.Extend("FullCalendar", {
             var oldCells = elem.aasEventCells;
             elem.aasEventCells = {};
 
-            //var count = rowControls.length;
-            //for (var n = 0; n < count; n++) {
+            var count = rowControls.length;
+            for (var n = 0; n < count; n++) {
 
-            //    var c = rowControls[n].CellControls[0]; // The cell corresponding to the CalendarEvent ColumnBinding
-            //    var cellInfo = c.aasCell;
+                var c = rowControls[n].CellControls[0]; // The cell corresponding to the CalendarEvent ColumnBinding
+                var cellInfo = c.aasCell;
 
-            //    elem.aasEventCells[cellInfo.RowId] = c;
-            //    oldCells[cellInfo.RowId] = null;
-            //    delete oldCells[cellInfo.RowId];
+                elem.aasEventCells[cellInfo.RowId] = c;
+                oldCells[cellInfo.RowId] = null;
+                delete oldCells[cellInfo.RowId];
 
-            //    if (cellInfo.IsNew) {
+                if (cellInfo.IsNew) {
 
-            //        var start = Aspectize.UiExtensions.GetProperty(c, 'Start');
-            //        var end = Aspectize.UiExtensions.GetProperty(c, 'End');
+                    var start = Aspectize.UiExtensions.GetProperty(c, 'Start');
+                    var end = Aspectize.UiExtensions.GetProperty(c, 'End');
 
-            //        var editable = Aspectize.UiExtensions.GetProperty(c, 'EditMode');
+                    var editable = Aspectize.UiExtensions.GetProperty(c, 'EditMode');
 
-            //        var evt = {
+                    var evt = {
 
-            //            id: cellInfo.RowId,
-            //            title: Aspectize.UiExtensions.GetProperty(c, 'Text'),
-            //            start: moment(start),
-            //            end: moment(end),
-            //            allDay: Aspectize.UiExtensions.GetProperty(c, 'AllDay'),
+                        id: cellInfo.RowId,
+                        title: Aspectize.UiExtensions.GetProperty(c, 'Text'),
+                        start: start,
+                        end: end,
+                        allDay: Aspectize.UiExtensions.GetProperty(c, 'AllDay'),
 
-            //            editable: editable,
-            //            startEditable: editable,
-            //            durationEditable: editable,
+                        editable: editable,
+                        startEditable: editable,
+                        durationEditable: editable,
 
-            //            displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
-            //            displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
-            //            timeFormat: Aspectize.UiExtensions.GetProperty(c, 'TimeFormat'),
+                        displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
+                        displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
+                        //timeFormat: Aspectize.UiExtensions.GetProperty(c, 'TimeFormat'),
 
-            //            className: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
-            //        };
+                        backgroundColor: 'red',
+                        borderColor: 'blue',
+                        textColor: 'white',
+                        classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
+                    };
 
-            //        fcObj.fullCalendar('renderEvent', evt, true);
-            //    }
-            //}
+                    fcObj.addEvent(evt);
+                }
+            }
 
-            //for (var oldId in oldCells) {
-            //    fcObj.fullCalendar('removeEvents', oldId);
-            //}
+            for (var oldId in oldCells) {
+                var evt = fcObj.getEventById(oldId);
+                evt.remove();
+            }
+
+            fcObj.render();
         };
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
 
+            return;
             var newOptions = {};
             var header = {};
             for (var p in arg) {
@@ -346,70 +274,68 @@ Aspectize.Extend("CalendarEvent", {
 
     Binding: 'ColumnBinding',
 
-    Properties: { Id: '', Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true, TimeFormat: 'HH:mm' },
-    Events: ['OnPropertyChanged', 'OnEventChanged', 'OnStartChanged', 'OnEndChanged', 'OnEventClick'],
+    Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true },
+    Events: ['OnPropertyChanged', 'OnEventChanged', 'OnEventClick'],
 
     Map: {
         Text: 'title', Start: 'start', End: 'end', AllDay: 'allDay',
         EditMode: ['editable', 'startEditable', 'durationEditable'],
         DisplayStartTime: 'displayEventTime', DisplayEndTime: 'displayEventEnd',
-        TimeFormat: 'timeFormat', CssClass: 'className', Order: 'order', Id: 'id'
+        CssClass: 'classNames', Order: 'order'
+        //TimeFormat: 'timeFormat'
     },
 
     Init: function (elem, controlInfo) {
 
         var map = this.Map;
-        //var eventId = elem.aasCell.RowId;
-        //var fcObj = $(elem.aasCell.ParentControl);
+        var eventId = elem.aasCell.RowId;
+        var fcObj = elem.aasCell.ParentControl.aasFcObj;
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
 
-            var n = 12;
-            //var events = fcObj.fullCalendar('clientEvents', eventId);
+            var evt = fcObj.getEventById(eventId);
 
-            //var evt = events[0];
+            if (evt) {
 
-            //if (evt) {
+                for (var p in arg) {
 
-            //    for (var p in arg) {
+                    var v = arg[p];
+                    var f = map[p];
 
-            //        var v = arg[p];
-            //        var f = map[p];
+                    var set = (p !== 'Order') ? 'setProp' : 'setExtendedProp';
 
-            //        if (f) {
+                    if (f) {
 
-            //            if (f.constructor === Array) {
+                        if (f.constructor === Array) {
 
-            //                for (var n = 0; n < f.length; n++) {
+                            for (var n = 0; n < f.length; n++) {
 
-            //                    var af = f[n];
+                                var af = f[n];
 
-            //                    if (af in evt) {
+                                if (af in evt) {
 
-            //                        evt[af] = v;
-            //                    }
-            //                }
+                                    evt[set](af, v);
+                                }
+                            }
 
-            //            } else if (f in evt) {
+                        } else if (f in evt) {
 
-            //                if (v.constructor === Date) {
+                            evt[set](f, v);
+                            //if (v.constructor === Date) {
 
-            //                    evt[f] = moment(v);
+                            //    evt.setProp(f, v);
+                            //} else {
 
-            //                } else {
+                            //    if ((evt[f].constructor === Array) && evt[f].length) {
 
-            //                    if ((evt[f].constructor === Array) && evt[f].length) {
+                            //        evt[f][0] = v;
 
-            //                        evt[f][0] = v;
-
-            //                    } else evt[f] = v;
-            //                }
-            //            }
-            //        }
-            //    }
-
-            //    fcObj.fullCalendar('updateEvent', evt);
-            //}
+                            //    } else evt[f] = v;
+                            //}
+                        }
+                    }
+                }
+            }
         });
     }
 });
