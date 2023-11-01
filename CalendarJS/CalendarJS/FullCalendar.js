@@ -84,7 +84,7 @@ Aspectize.Extend("FullCalendar", {
         function fSelect(arg) {
 
             var eventData = {
-                start: sarg.start,
+                start: arg.start,
                 end: arg.end
             };
 
@@ -113,17 +113,15 @@ Aspectize.Extend("FullCalendar", {
 
         //#region EventColumn events 
         //#region OnEventChanged
-        fcOptions.eventResize = function (arg) {
+        var fEventResize = function (arg) {
 
             var evt = arg.event;
             var eventCell = elem.aasEventCells[evt.id];
 
-            var startDelta = arg.startDelta;
-            var endDelta = arg.endDelta;
-
-            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, StartDelta: startDelta, EndDelta: endDelta, CancelChange: null });
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, DomEvent: arg.jsEvent, Start: evt.start, End: evt.end, CancelChange: null });
 
         };
+        fcOptions.eventResize = fEventResize
         //#endregion
 
         //#region OnEventClick
@@ -132,7 +130,7 @@ Aspectize.Extend("FullCalendar", {
             var eventCell = elem.aasEventCells[evt.id];
 
             Aspectize.UiExtensions.SetCurrent(elem, evt.id);
-            Aspectize.UiExtensions.Notify(eventCell, 'OnEventClick', { Id: evt.id, Event: evt, DomEvent: '' });
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventClick', { Id: evt.id, Event: evt, DomEvent: arg.jsEvent });
         };
         //#endregion
         //#endregion
@@ -186,11 +184,7 @@ Aspectize.Extend("FullCalendar", {
 
                         displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
                         displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
-                        //timeFormat: Aspectize.UiExtensions.GetProperty(c, 'TimeFormat'),
 
-                        backgroundColor: 'red',
-                        borderColor: 'blue',
-                        textColor: 'white',
                         classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
                     };
 
@@ -208,64 +202,78 @@ Aspectize.Extend("FullCalendar", {
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
 
-            return;
             var newOptions = {};
-            var header = {};
+
             for (var p in arg) {
 
                 var v = arg[p];
 
                 switch (p) {
 
-                    case 'Locale': newOptions.locale = v; break;
+                    case 'Locale': fcObj.setOption('locale', v); break;
+                    case 'View': fcObj.changeView(v); break;
+                    case 'InitialDate': fcObj.gotoDate(v); break;
+
+                    case 'EventSortExpression': fcObj.setOption('eventOrder', v); break;
 
                     case 'EditMode': {
-                        if (v) {
-                            newOptions.select = fSelect;
-                            newOptions.eventResize = fEventResize;
-                            newOptions.eventDrop = fEventDrop;
-                        }
-                        newOptions.selectable = v;
-                        newOptions.editable = v;
-                        newOptions.startEditable = v;
-                        newOptions.durationEditable = v;
+
+                        fcObj.setOption('selectable', v);
+                        fcObj.setOption('editable', v);
+                        fcObj.setOption('startEditable', v);
+                        fcObj.setOption('durationEditable', v);
+                        fcObj.setOption('select', v ? fSelect : null);
+                        fcObj.setOption('eventResize', v ? fEventResize : function (info) { info.revert(); });
+                        //newOptions.eventDrop = v ? fEventDrop : null;
                     } break;
 
                     case 'LeftButtons': {
-                        header.left = v
-                        newOptions.header = header;
+                        var xtb = fcObj.getOption('headerToolbar');
+                        xtb.left = v;
+                        fcObj.setOption('headerToolbar', xtb);                 
                     } break;
                     case 'CenterButtons': {
-                        header.center = v;
-                        newOptions.header = header;
+                        var xtb = fcObj.getOption('headerToolbar');
+                        xtb.center = v;
+                        fcObj.setOption('headerToolbar', xtb);
                     } break;
                     case 'RightButtons': {
-                        header.right = v;
-                        newOptions.header = header;
+                        var xtb = fcObj.getOption('headerToolbar');
+                        xtb.right = v;
+                        fcObj.setOption('headerToolbar', xtb);
                     } break;
 
-                        //case 'View': fcObj.fullCalendar('changeView', v); /*newOptions.defaultView = v;*/ break;
-                    case 'WeekEnds': newOptions.weekends = v; break;
-                    case 'WeekNumbers': newOptions.weekNumbers = v; break;
+                    case 'WeekNumbers': fcObj.setOption('weekNumbers', v); break;
+
+                    case 'WeekEnds':
+                        fcObj.setOption('weekends', v);
+                        var xbh = fcObj.getOption('businessHours');
+                        xbh.daysOfWeek = v ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+                        fcObj.setOption('businessHours', xbh);
+                        break;
+
                     case 'BusinessHours': {
 
                         if (rxBH.test(v)) {
 
+                            var weekEnds = fcObj.getOption('weekends');
                             var parts = v.split('-');
-                            newOptions.businessHours = {
-                                dow: [0, 1, 2, 3, 4, 5, 6],
-                                start: parts[0],
-                                end: parts[1]
+                            var nbh = {
+                                // days of week. an array of zero-based day of week integers (0=Sunday)
+                                daysOfWeek: weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5],
+                                startTime: parts[0],
+                                endTime: parts[1]
                             };
+                            fcObj.setOption('businessHours', nbh);
                         }
+
                     } break;
 
-                    case 'MinTime': newOptions.minTime = v; break;
-                    case 'MaxTime': newOptions.maxTime = v; break;
+                    case 'MinTime': fcObj.setOption('minTime', v); break;
+                    case 'MaxTime': fcObj.setOption('maxTime', v); break;
                 }
             }
 
-            //fcObj.fullCalendar('option', newOptions);
         });
     }
 });
