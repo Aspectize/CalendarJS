@@ -96,16 +96,22 @@ Aspectize.Extend("FullCalendar", {
         //#region OnNeedEvents
         function needEvents(fetchInfo, successCallback, failureCallback) {
 
-            var eventData = {
-                start: fetchInfo.start,
-                end: fetchInfo.end
-            };
 
-            Aspectize.UiExtensions.Notify(elem, 'OnNeedEvents', eventData);
+            var xEvents = fcObj ? fcObj.getEvents() : [];
+            var xEventsObj = {};
+            for (var n = 0; n < xEvents.length; n++) {
+                var e = xEvents[n];
+                xEventsObj[e.id] = e;
+            }
+
+            var eventArg = { start: fetchInfo.start, end: fetchInfo.end };
+            Aspectize.UiExtensions.Notify(elem, 'OnNeedEvents', eventArg);
 
             if (successCallback) {
-                var events = fcObj ? fcObj.getEvents() : [];
-                successCallback(events);
+                var currentvents = fcObj ? fcObj.getEvents() : [];
+                var newEvents = currentvents.filter(function(x) { return !(x.id in xEventsObj) });
+                
+                successCallback(newEvents);
             }
         }
         fcOptions.events = needEvents;
