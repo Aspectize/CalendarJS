@@ -77,16 +77,15 @@ Aspectize.Extend("FullCalendar", {
 
                 return { html: arg.event.title };
             }
+
+            
         };
         //#endregion
 
         //#region OnNewEvent
         function fSelect(arg) {
 
-            var eventData = {
-                start: arg.start,
-                end: arg.end
-            };
+            var eventData = { Start: arg.start, End: arg.end };
 
             Aspectize.UiExtensions.Notify(elem, 'OnNewEvent', eventData);
         }
@@ -124,10 +123,19 @@ Aspectize.Extend("FullCalendar", {
             var evt = arg.event;
             var eventCell = elem.aasEventCells[evt.id];
 
-            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Event: evt, DomEvent: arg.jsEvent, Start: evt.start, End: evt.end, CancelChange: null });
+            var start = evt.start;
+            var end = evt.end;
 
+            var oldStart = eventCell.aasGetProperty('Start');
+            if (oldStart.valueOf() !== start.valueOf()) eventCell.aasSetProperty('Start', start);
+
+            var oldEnd = eventCell.aasGetProperty('End');
+            if (oldEnd.valueOf() !== end.valueOf()) eventCell.aasSetProperty('End', end);  
+
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Id: evt.id, Start: start, End: end, Event: evt, DomEvent: arg.jsEvent, CancelChange: null });
         };
-        fcOptions.eventResize = fEventResize
+        fcOptions.eventResize = fEventResize;
+        fcOptions.eventDrop = fEventResize;
         //#endregion
 
         //#region OnEventClick
@@ -145,6 +153,11 @@ Aspectize.Extend("FullCalendar", {
         fcObj.render();
 
         elem.aasFcObj = fcObj;
+
+        controlInfo.Rerender=function() {
+
+            fcObj.render();
+        },
 
         controlInfo.StartRender = function (control, rowCount) {
 
@@ -289,14 +302,13 @@ Aspectize.Extend("CalendarEvent", {
     Binding: 'ColumnBinding',
 
     Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true },
-    Events: ['OnPropertyChanged', 'OnEventChanged', 'OnEventClick'],
+    Events: ['OnPropertyChanged', 'OnStartChanged', 'OnEndChanged', 'OnEventChanged', 'OnEventClick'],
 
     Map: {
         Text: 'title', Start: 'start', End: 'end', AllDay: 'allDay',
         EditMode: ['editable', 'startEditable', 'durationEditable'],
         DisplayStartTime: 'displayEventTime', DisplayEndTime: 'displayEventEnd',
         CssClass: 'classNames', Order: 'order'
-        //TimeFormat: 'timeFormat'
     },
 
     Init: function (elem, controlInfo) {
@@ -334,18 +346,7 @@ Aspectize.Extend("CalendarEvent", {
 
                         } else if (f in evt) {
 
-                            evt[set](f, v);
-                            //if (v.constructor === Date) {
-
-                            //    evt.setProp(f, v);
-                            //} else {
-
-                            //    if ((evt[f].constructor === Array) && evt[f].length) {
-
-                            //        evt[f][0] = v;
-
-                            //    } else evt[f] = v;
-                            //}
+                            evt[set](f, v);                            
                         }
                     }
                 }
