@@ -1,4 +1,4 @@
-/// <reference path="S:\Delivery\Aspectize.core\AspectizeIntellisense.js" />
+﻿/// <reference path="S:\Delivery\Aspectize.core\AspectizeIntellisense.js" />
 /// <reference path="S:\Delivery\Aspectize.core\AspectizeIntellisenseLibrary.js" />
 
 /* Aspectize FullCalendar extension */
@@ -18,7 +18,20 @@ Aspectize.Extend("FullCalendar", {
         var viewMode = Aspectize.UiExtensions.GetProperty(elem, 'View');
         var initDate = Aspectize.UiExtensions.GetProperty(elem, 'InitialDate');
         var eventSort = Aspectize.UiExtensions.GetProperty(elem, 'EventSortExpression');
+        var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
+        var isFrench = locale === 'fr';
 
+        var buttonTexts = {
+            today: isFrench ? 'aujourd\'hui' : 'today',
+            month: isFrench ? 'mois' : 'month',
+            week: isFrench ? 'semaine' : 'week',
+            day: isFrench ? 'jour' : 'day',
+            list: isFrench ? 'liste' : 'list',
+
+            prev: isFrench ? 'Précédent' : 'Previous',
+            next: isFrench ? 'Suivant' : 'Next'
+        };
+        
         //#region businessHours
         var weekEnds = Aspectize.UiExtensions.GetProperty(elem, 'WeekEnds');
         var businessHours = Aspectize.UiExtensions.GetProperty(elem, 'BusinessHours');
@@ -47,6 +60,8 @@ Aspectize.Extend("FullCalendar", {
         //#region all options
         var fcOptions = {
 
+            buttonText: buttonTexts,
+
             headerToolbar: htb,
 
             businessHours: bh,
@@ -66,7 +81,7 @@ Aspectize.Extend("FullCalendar", {
             initialView: viewMode,
             themeSystem: 'standard',
 
-            locale: Aspectize.UiExtensions.GetProperty(elem, 'Locale'),
+            locale: locale,
             nowIndicator: true,
             height: '100%',
 
@@ -78,7 +93,7 @@ Aspectize.Extend("FullCalendar", {
                 return { html: arg.event.title };
             }
 
-            
+
         };
         //#endregion
 
@@ -108,8 +123,8 @@ Aspectize.Extend("FullCalendar", {
 
             if (successCallback) {
                 var currentvents = fcObj ? fcObj.getEvents() : [];
-                var newEvents = currentvents.filter(function(x) { return !(x.id in xEventsObj) });
-                
+                var newEvents = currentvents.filter(function (x) { return !(x.id in xEventsObj) });
+
                 successCallback(newEvents);
             }
         }
@@ -130,7 +145,7 @@ Aspectize.Extend("FullCalendar", {
             if (oldStart.valueOf() !== start.valueOf()) eventCell.aasSetProperty('Start', start);
 
             var oldEnd = eventCell.aasGetProperty('End');
-            if (oldEnd.valueOf() !== end.valueOf()) eventCell.aasSetProperty('End', end);  
+            if (oldEnd.valueOf() !== end.valueOf()) eventCell.aasSetProperty('End', end);
 
             Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Id: evt.id, Start: start, End: end, Event: evt, DomEvent: arg.jsEvent, CancelChange: null });
         };
@@ -154,7 +169,7 @@ Aspectize.Extend("FullCalendar", {
 
         elem.aasFcObj = fcObj;
 
-        controlInfo.Rerender=function() {
+        controlInfo.Rerender = function () {
 
             fcObj.render();
         },
@@ -249,7 +264,7 @@ Aspectize.Extend("FullCalendar", {
                     case 'LeftButtons': {
                         var xtb = fcObj.getOption('headerToolbar');
                         xtb.left = v;
-                        fcObj.setOption('headerToolbar', xtb);                 
+                        fcObj.setOption('headerToolbar', xtb);
                     } break;
                     case 'CenterButtons': {
                         var xtb = fcObj.getOption('headerToolbar');
@@ -346,7 +361,7 @@ Aspectize.Extend("CalendarEvent", {
 
                         } else if (f in evt) {
 
-                            evt[set](f, v);                            
+                            evt[set](f, v);
                         }
                     }
                 }
