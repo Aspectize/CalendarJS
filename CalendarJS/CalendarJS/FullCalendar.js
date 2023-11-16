@@ -31,7 +31,7 @@ Aspectize.Extend("FullCalendar", {
             prev: isFrench ? 'Précédent' : 'Previous',
             next: isFrench ? 'Suivant' : 'Next'
         };
-        
+
         //#region businessHours
         var weekEnds = Aspectize.UiExtensions.GetProperty(elem, 'WeekEnds');
         var businessHours = Aspectize.UiExtensions.GetProperty(elem, 'BusinessHours');
@@ -63,6 +63,8 @@ Aspectize.Extend("FullCalendar", {
             buttonText: buttonTexts,
 
             headerToolbar: htb,
+
+            allDayText: isFrench ? 'journée' : 'all-day',
 
             businessHours: bh,
             slotMinTime: Aspectize.UiExtensions.GetProperty(elem, 'MinTime'),
@@ -331,6 +333,7 @@ Aspectize.Extend("CalendarEvent", {
         var map = this.Map;
         var eventId = elem.aasCell.RowId;
         var fcObj = elem.aasCell.ParentControl.aasFcObj;
+        var pBag = controlInfo.PropertyBag;
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
 
@@ -343,7 +346,21 @@ Aspectize.Extend("CalendarEvent", {
                     var v = arg[p];
                     var f = map[p];
 
-                    var set = (p !== 'Order') ? 'setProp' : 'setExtendedProp';
+                    var specificSet = false;
+                    var set = 'setProp';
+                    if (p !== 'Order') {
+
+                        switch (p) {
+                            case 'Start':
+                            case 'End':
+                            case 'AllDay':
+                                set = 'set' + p; specificSet = true;
+                                break;
+                        }
+
+                    } else set = 'setExtendedProp';
+
+
 
                     if (f) {
 
@@ -361,7 +378,19 @@ Aspectize.Extend("CalendarEvent", {
 
                         } else if (f in evt) {
 
-                            evt[set](f, v);
+                            if (specificSet) {
+                                
+                                evt[set](v);
+
+                                if (set === 'setAllDay') {
+
+                                    if (!v) {
+                                        evt.setStart(pBag.Start);
+                                        evt.setEnd(pBag.End);
+                                    }
+                                }
+
+                            } else evt[set](f, v);
                         }
                     }
                 }
