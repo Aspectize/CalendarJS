@@ -93,6 +93,13 @@ Aspectize.Extend("FullCalendar", {
             eventContent: function (arg) {
 
                 return { html: arg.event.title };
+            },
+
+            buttonIcons: {
+                prev: 'chevron-left',
+                next: 'chevron-right',
+                prevYear: 'chevrons-left',
+                nextYear: 'chevrons-right'
             }
 
 
