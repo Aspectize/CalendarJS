@@ -325,14 +325,14 @@ Aspectize.Extend("CalendarEvent", {
 
     Binding: 'ColumnBinding',
 
-    Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true },
+    Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true, BgColor: 'Black', Color: 'White' },
     Events: ['OnPropertyChanged', 'OnStartChanged', 'OnEndChanged', 'OnEventChanged', 'OnEventClick'],
 
     Map: {
         Text: 'title', Start: 'start', End: 'end', AllDay: 'allDay',
-        EditMode: ['editable', 'startEditable', 'durationEditable'],
+        EditMode: ['startEditable', 'durationEditable'],
         DisplayStartTime: 'displayEventTime', DisplayEndTime: 'displayEventEnd',
-        CssClass: 'classNames', Order: 'order'
+        CssClass: 'classNames', BgColor: 'backgroundColor', Color: 'textColor', Order: 'order'
     },
 
     Init: function (elem, controlInfo) {
@@ -355,19 +355,20 @@ Aspectize.Extend("CalendarEvent", {
 
                     var specificSet = false;
                     var set = 'setProp';
-                    if (p !== 'Order') {
+                    switch (p) {
+                        case 'Order':
+                            set = 'setExtendedProp';
+                            break;
 
-                        switch (p) {
-                            case 'Start':
-                            case 'End':
-                            case 'AllDay':
-                                set = 'set' + p; specificSet = true;
-                                break;
-                        }
-
-                    } else set = 'setExtendedProp';
-
-
+                        default:
+                            switch (p) {
+                                case 'Start':
+                                case 'End':
+                                case 'AllDay':
+                                    set = 'set' + p; specificSet = true;
+                                    break;
+                            }
+                    }
 
                     if (f) {
 
@@ -377,17 +378,25 @@ Aspectize.Extend("CalendarEvent", {
 
                                 var af = f[n];
 
-                                if (af in evt) {
-
-                                    evt[set](af, v);
-                                }
+                                evt[set](af, v);
                             }
 
-                        } else if (f in evt) {
+                        } else {
 
                             if (specificSet) {
-                                
+
+                                var editable = pBag.EditMode;
+                                if (!editable) {
+                                    evt.setProp('startEditable', true);
+                                    evt.setProp('durationEditable', true);
+                                }
+
                                 evt[set](v);
+
+                                if (!editable) {
+                                    evt.setProp('startEditable', false);
+                                    evt.setProp('durationEditable', false);
+                                }
 
                                 if (set === 'setAllDay') {
 
