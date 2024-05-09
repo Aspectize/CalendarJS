@@ -40,11 +40,11 @@ Aspectize.Extend("FullCalendar", {
                 day: isFrench ? 'jour' : 'day',
                 list: isFrench ? 'liste' : 'list',
                 
-                prev: useIcons ? '<i class="fa-solid fa-angle-left"></i>' : (isFrench ? 'Précédent' : 'Previous'),
-                next: useIcons ? '<i class="fa-solid fa-angle-right"></i>' : (isFrench ? 'Suivant' : 'Next'),
+                prev: useIcons ? '<i class="fas fa-angle-left"></i>' : (isFrench ? 'Précédent' : 'Previous'),
+                next: useIcons ? '<i class="fas fa-angle-right"></i>' : (isFrench ? 'Suivant' : 'Next'),
 
-                prevYear: useIcons ? '<i class="fa-solid fa-angles-left"></i>' : (isFrench ? 'Année précédente' : 'Previous year'),
-                nextYear: useIcons ? '<i class="fa-solid fa-angles-right"></i>' : (isFrench ? 'Année suivante' : 'Next year')
+                prevYear: useIcons ? '<i class="fas fa-angles-left"></i>' : (isFrench ? 'Année précédente' : 'Previous year'),
+                nextYear: useIcons ? '<i class="fas fa-angles-right"></i>' : (isFrench ? 'Année suivante' : 'Next year')
             };
             var allDay = isFrench ? 'journée' : 'all-day';
   
