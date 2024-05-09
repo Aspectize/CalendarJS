@@ -7,7 +7,7 @@ Aspectize.Extend("FullCalendar", {
 
     Binding: 'GridBinding',
 
-    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'fr', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00' },
+    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'fr', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons:false },
     Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent'],
 
     Init: function (elem, controlInfo) {
@@ -19,18 +19,58 @@ Aspectize.Extend("FullCalendar", {
         var initDate = Aspectize.UiExtensions.GetProperty(elem, 'InitialDate');
         var eventSort = Aspectize.UiExtensions.GetProperty(elem, 'EventSortExpression');
         var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
-        var isFrench = locale === 'fr';
 
-        var buttonTexts = {
-            today: isFrench ? 'aujourd\'hui' : 'today',
-            month: isFrench ? 'mois' : 'month',
-            week: isFrench ? 'semaine' : 'week',
-            day: isFrench ? 'jour' : 'day',
-            list: isFrench ? 'liste' : 'list',
+        function removeToolTips(element) {
 
-            prev: isFrench ? 'Précédent' : 'Previous',
-            next: isFrench ? 'Suivant' : 'Next'
-        };
+            var buttons = element.querySelectorAll('.fc-header-toolbar button[title]');
+
+            for (var n = 0; n < buttons.length; n++) buttons[n].title = '';
+        }
+
+        function getTexts(locale) {
+
+            var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
+
+            var isFrench = locale === 'fr';
+
+            var button = {
+                today: isFrench ? 'aujourd\'hui' : 'today',
+                month: isFrench ? 'mois' : 'month',
+                week: isFrench ? 'semaine' : 'week',
+                day: isFrench ? 'jour' : 'day',
+                list: isFrench ? 'liste' : 'list',
+                
+                prev: useIcons ? '<i class="fa-solid fa-angle-left"></i>' : (isFrench ? 'Précédent' : 'Previous'),
+                next: useIcons ? '<i class="fa-solid fa-angle-right"></i>' : (isFrench ? 'Suivant' : 'Next'),
+
+                prevYear: useIcons ? '<i class="fa-solid fa-angles-left"></i>' : (isFrench ? 'Année précédente' : 'Previous year'),
+                nextYear: useIcons ? '<i class="fa-solid fa-angles-right"></i>' : (isFrench ? 'Année suivante' : 'Next year')
+            };
+            var allDay = isFrench ? 'journée' : 'all-day';
+  
+            return { button: button, allDay: allDay };
+        }
+        function updateTexts() {
+
+            var buttonText = fcObj.getOption('buttonText');
+
+            var updateButtons = { today: 1, prev: 1, next: 1, prevYear: 1, nextYear:1};
+            for (var k in updateButtons) {
+
+                var bSelector = '.fc-' + k + '-button';
+                var b = elem.querySelector(bSelector);
+                if (b) b.innerHTML = buttonText[k];
+            }
+
+            removeToolTips(elem);
+        }
+        function removeToolTips(element) {
+
+            var buttons = element.querySelectorAll('.fc-header-toolbar button[title]');
+
+            for (var n = 0; n < buttons.length; n++) buttons[n].title = '';
+        }
+        var texts = getTexts(locale);
 
         //#region businessHours
         var weekEnds = Aspectize.UiExtensions.GetProperty(elem, 'WeekEnds');
@@ -60,11 +100,11 @@ Aspectize.Extend("FullCalendar", {
         //#region all options
         var fcOptions = {
 
-            buttonText: buttonTexts,
+            buttonText: texts.button,
 
             headerToolbar: htb,
 
-            allDayText: isFrench ? 'journée' : 'all-day',
+            allDayText: texts.allDay,
 
             businessHours: bh,
             slotMinTime: Aspectize.UiExtensions.GetProperty(elem, 'MinTime'),
@@ -93,16 +133,7 @@ Aspectize.Extend("FullCalendar", {
             eventContent: function (arg) {
 
                 return { html: arg.event.title };
-            },
-
-            buttonIcons: {
-                prev: 'chevron-left',
-                next: 'chevron-right',
-                prevYear: 'chevrons-left',
-                nextYear: 'chevrons-right'
             }
-
-
         };
         //#endregion
 
@@ -175,6 +206,7 @@ Aspectize.Extend("FullCalendar", {
 
         var fcObj = new FullCalendar.Calendar(elem, fcOptions);
         fcObj.render();
+        updateTexts();
 
         elem.aasFcObj = fcObj;
 
@@ -252,8 +284,16 @@ Aspectize.Extend("FullCalendar", {
                 var v = arg[p];
 
                 switch (p) {
+                    case 'UseButtonIcons':
+                    case 'Locale': {
 
-                    case 'Locale': fcObj.setOption('locale', v); break;
+                        var texts = getTexts(v);
+                        fcObj.setOption('buttonText', texts.button);
+                        fcObj.setOption('allDayText', texts.allDay);
+                        if (p === 'Locale') fcObj.setOption('locale', v);
+                        updateTexts();
+                    } break;
+
                     case 'View': fcObj.changeView(v); break;
                     case 'InitialDate': fcObj.gotoDate(v); break;
 
@@ -267,7 +307,6 @@ Aspectize.Extend("FullCalendar", {
                         fcObj.setOption('durationEditable', v);
                         fcObj.setOption('select', v ? fSelect : null);
                         fcObj.setOption('eventResize', v ? fEventResize : function (info) { info.revert(); });
-                        //newOptions.eventDrop = v ? fEventDrop : null;
                     } break;
 
                     case 'LeftButtons': {
