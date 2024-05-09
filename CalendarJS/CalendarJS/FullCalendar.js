@@ -7,7 +7,7 @@ Aspectize.Extend("FullCalendar", {
 
     Binding: 'GridBinding',
 
-    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'fr', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons:false },
+    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'en', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons: true },
     Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent'],
 
     Init: function (elem, controlInfo) {
@@ -18,7 +18,6 @@ Aspectize.Extend("FullCalendar", {
         var viewMode = Aspectize.UiExtensions.GetProperty(elem, 'View');
         var initDate = Aspectize.UiExtensions.GetProperty(elem, 'InitialDate');
         var eventSort = Aspectize.UiExtensions.GetProperty(elem, 'EventSortExpression');
-        var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
 
         function removeToolTips(element) {
 
@@ -29,8 +28,6 @@ Aspectize.Extend("FullCalendar", {
 
         function getTexts(locale) {
 
-            var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
-
             var isFrench = locale === 'fr';
 
             var button = {
@@ -39,33 +36,17 @@ Aspectize.Extend("FullCalendar", {
                 week: isFrench ? 'semaine' : 'week',
                 day: isFrench ? 'jour' : 'day',
                 list: isFrench ? 'liste' : 'list',
-                
-                prev: useIcons ? '<i class="fas fa-angle-left"></i>' : (isFrench ? 'Précédent' : 'Previous'),
-                next: useIcons ? '<i class="fas fa-angle-right"></i>' : (isFrench ? 'Suivant' : 'Next'),
 
-                prevYear: useIcons ? '<i class="fas fa-angles-left"></i>' : (isFrench ? 'Année précédente' : 'Previous year'),
-                nextYear: useIcons ? '<i class="fas fa-angles-right"></i>' : (isFrench ? 'Année suivante' : 'Next year')
+                prev: (isFrench ? 'Précédent' : 'Previous'),
+                next: (isFrench ? 'Suivant' : 'Next'),
+
+                prevYear: (isFrench ? 'Année précédente' : 'Previous year'),
+                nextYear: (isFrench ? 'Année suivante' : 'Next year')
             };
             var allDay = isFrench ? 'journée' : 'all-day';
-  
+
             return { button: button, allDay: allDay };
         }
-        function updateTexts() {
-
-            var buttonText = fcObj.getOption('buttonText');
-
-            var updateButtons = { today: 1, prev: 1, next: 1, prevYear: 1, nextYear:1};
-            for (var k in updateButtons) {
-
-                var bSelector = '.fc-' + k + '-button';
-                var b = elem.querySelector(bSelector);
-                if (b) b.innerHTML = buttonText[k];
-            }
-
-            removeToolTips(elem);
-        }
-        
-        var texts = getTexts(locale);
 
         //#region businessHours
         var weekEnds = Aspectize.UiExtensions.GetProperty(elem, 'WeekEnds');
@@ -95,11 +76,7 @@ Aspectize.Extend("FullCalendar", {
         //#region all options
         var fcOptions = {
 
-            buttonText: texts.button,
-
             headerToolbar: htb,
-
-            allDayText: texts.allDay,
 
             businessHours: bh,
             slotMinTime: Aspectize.UiExtensions.GetProperty(elem, 'MinTime'),
@@ -118,7 +95,6 @@ Aspectize.Extend("FullCalendar", {
             initialView: viewMode,
             themeSystem: 'standard',
 
-            locale: locale,
             nowIndicator: true,
             height: '100%',
 
@@ -201,7 +177,23 @@ Aspectize.Extend("FullCalendar", {
 
         var fcObj = new FullCalendar.Calendar(elem, fcOptions);
         fcObj.render();
-        updateTexts();
+        removeToolTips(elem);
+
+        //#region if defaut Locale or UseButtonIcons are changed
+        var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
+        if (locale !== 'en') {
+
+            var texts = getTexts(locale);
+            fcObj.setOption('buttonText', texts.button);
+            fcObj.setOption('allDayText', texts.allDay);
+            fcObj.setOption('locale', locale);
+        }
+
+        var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
+        if (!useIcons) {
+            fcObj.setOption('buttonIcons', useIcons);
+        }
+        //#endregion
 
         elem.aasFcObj = fcObj;
 
@@ -280,13 +272,17 @@ Aspectize.Extend("FullCalendar", {
 
                 switch (p) {
                     case 'UseButtonIcons':
+
+                        fcObj.setOption('buttonIcons', v);
+                        break;
+
                     case 'Locale': {
 
                         var texts = getTexts(v);
                         fcObj.setOption('buttonText', texts.button);
                         fcObj.setOption('allDayText', texts.allDay);
-                        if (p === 'Locale') fcObj.setOption('locale', v);
-                        updateTexts();
+                        fcObj.setOption('locale', v);
+
                     } break;
 
                     case 'View': fcObj.changeView(v); break;
@@ -302,7 +298,6 @@ Aspectize.Extend("FullCalendar", {
                         fcObj.setOption('durationEditable', v);
                         fcObj.setOption('select', v ? fSelect : null);
                         fcObj.setOption('eventResize', v ? fEventResize : function (info) { info.revert(); });
-                        updateTexts();
                     } break;
 
                     case 'LeftButtons': {
