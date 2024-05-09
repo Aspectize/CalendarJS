@@ -64,12 +64,7 @@ Aspectize.Extend("FullCalendar", {
 
             removeToolTips(elem);
         }
-        function removeToolTips(element) {
-
-            var buttons = element.querySelectorAll('.fc-header-toolbar button[title]');
-
-            for (var n = 0; n < buttons.length; n++) buttons[n].title = '';
-        }
+        
         var texts = getTexts(locale);
 
         //#region businessHours
@@ -307,6 +302,7 @@ Aspectize.Extend("FullCalendar", {
                         fcObj.setOption('durationEditable', v);
                         fcObj.setOption('select', v ? fSelect : null);
                         fcObj.setOption('eventResize', v ? fEventResize : function (info) { info.revert(); });
+                        updateTexts();
                     } break;
 
                     case 'LeftButtons': {
