@@ -112,7 +112,7 @@ Aspectize.Extend("FullCalendar", {
         //#region OnNewEvent
         function fSelect(arg) {
 
-            var eventData = { Start: arg.start, End: arg.end };
+            var eventData = { start: arg.start, end: arg.end };
 
             Aspectize.UiExtensions.Notify(elem, 'OnNewEvent', eventData);
         }
@@ -159,7 +159,7 @@ Aspectize.Extend("FullCalendar", {
             var oldEnd = eventCell.aasGetProperty('End');
             if (oldEnd.valueOf() !== end.valueOf()) eventCell.aasSetProperty('End', end);
 
-            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Id: evt.id, Start: start, End: end, Event: evt, DomEvent: arg.jsEvent, CancelChange: null });
+            Aspectize.UiExtensions.Notify(eventCell, 'OnEventChanged', { Id: evt.id, start: start, end: end, Event: evt, DomEvent: arg.jsEvent, CancelChange: null });
         };
         fcOptions.eventResize = fEventResize;
         fcOptions.eventDrop = fEventResize;
@@ -252,8 +252,8 @@ Aspectize.Extend("FullCalendar", {
                         startEditable: editable,
                         durationEditable: editable,
 
-                        displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
-                        displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
+                        //displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
+                        //displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
 
                         classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
                     };
