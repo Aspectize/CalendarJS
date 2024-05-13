@@ -60,8 +60,6 @@ Aspectize.Extend("FullCalendar", {
 
             var parts = businessHours.split('-');
             bh = {
-                // days of week. an array of zero-based day of week integers (0=Sunday)
-                //daysOfWeek: weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5],
                 startTime: parts[0],
                 endTime: parts[1]
             };
