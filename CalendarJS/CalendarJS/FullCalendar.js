@@ -182,7 +182,7 @@ Aspectize.Extend("FullCalendar", {
         fcObj.render();
         removeToolTips(elem);
 
-        //#region if defaut Locale or UseButtonIcons are changed
+        //#region if defaut values for Locale, UseButtonIcons or WeekEnds are changed
         if (locale !== 'en') {
 
             var texts = getTexts(locale);
@@ -194,6 +194,15 @@ Aspectize.Extend("FullCalendar", {
         if (!useIcons) {
             fcObj.setOption('buttonIcons', useIcons);
         }
+
+        if (!weekEnds) {
+
+            fcObj.setOption('weekends', weekEnds);
+            var xbh = fcObj.getOption('businessHours');
+            xbh.daysOfWeek = weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+            fcObj.setOption('businessHours', xbh);
+        }
+
         //#endregion
 
         elem.aasFcObj = fcObj;
