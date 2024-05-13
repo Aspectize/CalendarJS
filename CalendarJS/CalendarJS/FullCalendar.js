@@ -19,6 +19,9 @@ Aspectize.Extend("FullCalendar", {
         var initDate = Aspectize.UiExtensions.GetProperty(elem, 'InitialDate');
         var eventSort = Aspectize.UiExtensions.GetProperty(elem, 'EventSortExpression');
 
+        var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
+        var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
+
         function removeToolTips(element) {
 
             var buttons = element.querySelectorAll('.fc-header-toolbar button[title]');
@@ -58,7 +61,7 @@ Aspectize.Extend("FullCalendar", {
             var parts = businessHours.split('-');
             bh = {
                 // days of week. an array of zero-based day of week integers (0=Sunday)
-                daysOfWeek: weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5],
+                //daysOfWeek: weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5],
                 startTime: parts[0],
                 endTime: parts[1]
             };
@@ -180,7 +183,6 @@ Aspectize.Extend("FullCalendar", {
         removeToolTips(elem);
 
         //#region if defaut Locale or UseButtonIcons are changed
-        var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
         if (locale !== 'en') {
 
             var texts = getTexts(locale);
@@ -189,7 +191,6 @@ Aspectize.Extend("FullCalendar", {
             fcObj.setOption('locale', locale);
         }
 
-        var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
         if (!useIcons) {
             fcObj.setOption('buttonIcons', useIcons);
         }
