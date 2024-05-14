@@ -7,10 +7,19 @@ Aspectize.Extend("FullCalendar", {
 
     Binding: 'GridBinding',
 
-    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EditMode: false, Locale: 'en', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons: true },
+    Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EventOverlap: true, EditMode: false, Locale: 'en', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons: true, EventDisplayTime:true },
     Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent'],
 
     Init: function (elem, controlInfo) {
+
+        function getEvtHtml(title, timeText) {
+
+            var timePart = '<div class="fc-event-time">' + timeText + '</div>';
+            var titlePart = '<div class="fc-event-title-container"><div class="fc-event-title fc-sticky">'+ title + '</div></div>';
+            var htmlEvt = '<div class="fc-event-main-frame">' + timePart + titlePart + '</div>';
+
+            return htmlEvt;
+        }
 
         elem.aasEventCells = {};
 
@@ -18,7 +27,8 @@ Aspectize.Extend("FullCalendar", {
         var viewMode = Aspectize.UiExtensions.GetProperty(elem, 'View');
         var initDate = Aspectize.UiExtensions.GetProperty(elem, 'InitialDate');
         var eventSort = Aspectize.UiExtensions.GetProperty(elem, 'EventSortExpression');
-
+        var eventOverlap = Aspectize.UiExtensions.GetProperty(elem, 'EventOverlap');
+        
         var locale = Aspectize.UiExtensions.GetProperty(elem, 'Locale');
         var useIcons = Aspectize.UiExtensions.GetProperty(elem, 'UseButtonIcons');
 
@@ -101,10 +111,12 @@ Aspectize.Extend("FullCalendar", {
 
             eventOrder: eventSort,
             eventOrderStrict: true,
-
             eventContent: function (arg) {
 
-                return { html: arg.event.title };
+                var eventDisplayTime = Aspectize.UiExtensions.GetProperty(elem, 'EventDisplayTime');
+
+                var timeText = eventDisplayTime ? arg.timeText : '';
+                return { html: getEvtHtml(arg.event.title, timeText) };
             }
         };
         //#endregion
@@ -180,7 +192,7 @@ Aspectize.Extend("FullCalendar", {
         fcObj.render();
         removeToolTips(elem);
 
-        //#region if defaut values for Locale, UseButtonIcons or WeekEnds are changed
+        //#region if defaut values for Locale, UseButtonIcons, EventOverlap or WeekEnds are changed
         if (locale !== 'en') {
 
             var texts = getTexts(locale);
@@ -201,6 +213,11 @@ Aspectize.Extend("FullCalendar", {
             fcObj.setOption('businessHours', xbh);
         }
 
+        if (!eventOverlap) {
+
+            fcObj.setOption('slotEventOverlap', eventOverlap);
+
+        }
         //#endregion
 
         elem.aasFcObj = fcObj;
@@ -279,6 +296,8 @@ Aspectize.Extend("FullCalendar", {
                 var v = arg[p];
 
                 switch (p) {
+                    case 'EventOverlap': fcObj.setOption('slotEventOverlap', v); break;
+
                     case 'UseButtonIcons':
 
                         fcObj.setOption('buttonIcons', v);
