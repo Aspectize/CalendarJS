@@ -188,106 +188,114 @@ Aspectize.Extend("FullCalendar", {
         //#endregion
         //#endregion
 
-        var fcObj = new FullCalendar.Calendar(elem, fcOptions);
-        fcObj.render();
-        removeToolTips(elem);
-
-        //#region if defaut values for Locale, UseButtonIcons, EventOverlap or WeekEnds are changed
-        if (locale !== 'en') {
-
-            var texts = getTexts(locale);
-            fcObj.setOption('buttonText', texts.button);
-            fcObj.setOption('allDayText', texts.allDay);
-            fcObj.setOption('locale', locale);
-        }
-
-        if (!useIcons) {
-            fcObj.setOption('buttonIcons', useIcons);
-        }
-
-        if (!weekEnds) {
-
-            fcObj.setOption('weekends', weekEnds);
-            var xbh = fcObj.getOption('businessHours');
-            xbh.daysOfWeek = weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
-            fcObj.setOption('businessHours', xbh);
-        }
-
-        if (!eventOverlap) {
-
-            fcObj.setOption('slotEventOverlap', eventOverlap);
-
-        }
-        //#endregion
-
+        var fcObj = null;
         elem.aasFcObj = fcObj;
 
-        controlInfo.Rerender = function () {
+        if (window.FullCalendar && window.FullCalendar.Calendar) {
 
+            fcObj = new FullCalendar.Calendar(elem, fcOptions);
             fcObj.render();
-        },
+            removeToolTips(elem);
 
-        controlInfo.StartRender = function (control, rowCount) {
+            //#region if defaut values for Locale, UseButtonIcons, EventOverlap or WeekEnds are changed
+            if (locale !== 'en') {
 
-        };
+                var texts = getTexts(locale);
+                fcObj.setOption('buttonText', texts.button);
+                fcObj.setOption('allDayText', texts.allDay);
+                fcObj.setOption('locale', locale);
+            }
 
-        controlInfo.RowRender = function (control, cellControls) {
+            if (!useIcons) {
+                fcObj.setOption('buttonIcons', useIcons);
+            }
 
-        };
+            if (!weekEnds) {
 
-        controlInfo.EndRender = function (control, rowControls) {
+                fcObj.setOption('weekends', weekEnds);
+                var xbh = fcObj.getOption('businessHours');
+                xbh.daysOfWeek = weekEnds ? [0, 1, 2, 3, 4, 5, 6] : [1, 2, 3, 4, 5];
+                fcObj.setOption('businessHours', xbh);
+            }
 
-            var oldCells = elem.aasEventCells;
-            elem.aasEventCells = {};
+            if (!eventOverlap) {
 
-            var count = rowControls.length;
-            for (var n = 0; n < count; n++) {
+                fcObj.setOption('slotEventOverlap', eventOverlap);
 
-                var c = rowControls[n].CellControls[0]; // The cell corresponding to the CalendarEvent ColumnBinding
-                var cellInfo = c.aasCell;
+            }
+            //#endregion
 
-                elem.aasEventCells[cellInfo.RowId] = c;
-                oldCells[cellInfo.RowId] = null;
-                delete oldCells[cellInfo.RowId];
+            elem.aasFcObj = fcObj;
 
-                if (cellInfo.IsNew) {
+            controlInfo.Rerender = function () {
 
-                    var start = Aspectize.UiExtensions.GetProperty(c, 'Start');
-                    var end = Aspectize.UiExtensions.GetProperty(c, 'End');
+                fcObj.render();
+            },
 
-                    var editable = Aspectize.UiExtensions.GetProperty(c, 'EditMode');
+            controlInfo.StartRender = function (control, rowCount) {
 
-                    var evt = {
+            };
 
-                        id: cellInfo.RowId,
-                        title: Aspectize.UiExtensions.GetProperty(c, 'Text'),
-                        start: start,
-                        end: end,
-                        allDay: Aspectize.UiExtensions.GetProperty(c, 'AllDay'),
+            controlInfo.RowRender = function (control, cellControls) {
 
-                        editable: editable,
-                        startEditable: editable,
-                        durationEditable: editable,
+            };
 
-                        //displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
-                        //displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
+            controlInfo.EndRender = function (control, rowControls) {
 
-                        classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
-                    };
+                var oldCells = elem.aasEventCells;
+                elem.aasEventCells = {};
 
-                    fcObj.addEvent(evt);
+                var count = rowControls.length;
+                for (var n = 0; n < count; n++) {
+
+                    var c = rowControls[n].CellControls[0]; // The cell corresponding to the CalendarEvent ColumnBinding
+                    var cellInfo = c.aasCell;
+
+                    elem.aasEventCells[cellInfo.RowId] = c;
+                    oldCells[cellInfo.RowId] = null;
+                    delete oldCells[cellInfo.RowId];
+
+                    if (cellInfo.IsNew) {
+
+                        var start = Aspectize.UiExtensions.GetProperty(c, 'Start');
+                        var end = Aspectize.UiExtensions.GetProperty(c, 'End');
+
+                        var editable = Aspectize.UiExtensions.GetProperty(c, 'EditMode');
+
+                        var evt = {
+
+                            id: cellInfo.RowId,
+                            title: Aspectize.UiExtensions.GetProperty(c, 'Text'),
+                            start: start,
+                            end: end,
+                            allDay: Aspectize.UiExtensions.GetProperty(c, 'AllDay'),
+
+                            editable: editable,
+                            startEditable: editable,
+                            durationEditable: editable,
+
+                            //displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
+                            //displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
+
+                            classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
+                        };
+
+                        fcObj.addEvent(evt);
+                    }
                 }
-            }
 
-            for (var oldId in oldCells) {
-                var evt = fcObj.getEventById(oldId);
-                evt.remove();
-            }
+                for (var oldId in oldCells) {
+                    var evt = fcObj.getEventById(oldId);
+                    evt.remove();
+                }
 
-            fcObj.render();
-        };
+                fcObj.render();
+            };
+        }
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
+
+            if (!fcObj) return;
 
             var newOptions = {};
 
@@ -397,9 +405,13 @@ Aspectize.Extend("CalendarEvent", {
         var map = this.Map;
         var eventId = elem.aasCell.RowId;
         var fcObj = elem.aasCell.ParentControl.aasFcObj;
+        if (!fcObj) return;
+
         var pBag = controlInfo.PropertyBag;
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
+
+            if (!fcObj) return;
 
             var evt = fcObj.getEventById(eventId);
 
