@@ -4,4 +4,8 @@
 
     <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/core/locales-all.js' type="module"></script>
 
+
+	<script src="~CalendarJS/6.1.11/index.global.min.js"></script>
+	<script type="module" src='~CalendarJS/6.1.11/locales.fr.js'></script>
+
     <div aas-type="CalendarJS.FullCalendar" aas-name="XXX"></div>
