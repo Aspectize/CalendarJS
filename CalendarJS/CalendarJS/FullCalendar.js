@@ -195,7 +195,6 @@ Aspectize.Extend("FullCalendar", {
 
             fcObj = new FullCalendar.Calendar(elem, fcOptions);
             fcObj.render();
-            removeToolTips(elem);
 
             //#region if defaut values for Locale, UseButtonIcons, EventOverlap or WeekEnds are changed
             if (locale !== 'en') {
@@ -230,6 +229,7 @@ Aspectize.Extend("FullCalendar", {
             controlInfo.Rerender = function () {
 
                 fcObj.render();
+                removeToolTips(elem);
             },
 
             controlInfo.StartRender = function (control, rowCount) {
@@ -290,7 +290,10 @@ Aspectize.Extend("FullCalendar", {
                 }
 
                 fcObj.render();
+                removeToolTips(elem);
             };
+
+            removeToolTips(elem);
         }
 
         Aspectize.UiExtensions.AddMergedPropertyChangeObserver(elem, function (sender, arg) {
