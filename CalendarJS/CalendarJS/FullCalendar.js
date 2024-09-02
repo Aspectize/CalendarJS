@@ -8,7 +8,7 @@ Aspectize.Extend("FullCalendar", {
     Binding: 'GridBinding',
 
     Properties: { InitialDate: new Date(), EventSortExpression: 'start,-duration,order', EventOverlap: true, EditMode: false, Locale: 'en', View: 'dayGridMonth', LeftButtons: 'prevYear,prev,next,nextYear today', CenterButtons: 'title', RightButtons: 'dayGridMonth,dayGridWeek,dayGridDay listDay timeGridWeek', WeekEnds: true, WeekNumbers: false, BusinessHours: '08:30-18:30', MinTime: '00:00:00', MaxTime: '24:00:00', UseButtonIcons: true, EventDisplayTime:true },
-    Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent'],
+    Events: ['OnPropertyChanged', 'OnNeedEvents', 'OnNewEvent', 'OnAllowSelect'],
 
     Init: function (elem, controlInfo) {
 
@@ -102,6 +102,14 @@ Aspectize.Extend("FullCalendar", {
             editable: editMode,     //Determines whether the events on the calendar can be modified.
             eventResizableFromStart: editMode,
 
+            selectAllow: function (selectInfo) {
+
+                var now = new Date();
+                var eventArg = { start: selectInfo.start, end: selectInfo.end, allDay: selectInfo.allDay, valueOfNow: now.valueOf(), AllowSelect:true };
+                Aspectize.UiExtensions.Notify(elem, 'OnAllowSelect', eventArg);
+
+                return eventArg.AllowSelect;
+            },
             titleFormat: { year: 'numeric', month: 'long', day: '2-digit' },
             initialView: viewMode,
             themeSystem: 'standard',
@@ -274,9 +282,6 @@ Aspectize.Extend("FullCalendar", {
                             startEditable: editable,
                             durationEditable: editable,
 
-                            //displayEventTime: Aspectize.UiExtensions.GetProperty(c, 'DisplayStartTime'),
-                            //displayEventEnd: Aspectize.UiExtensions.GetProperty(c, 'DisplayEndTime'),
-
                             classNames: Aspectize.UiExtensions.GetProperty(c, 'CssClass')
                         };
 
@@ -393,13 +398,12 @@ Aspectize.Extend("CalendarEvent", {
 
     Binding: 'ColumnBinding',
 
-    Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', DisplayStartTime: true, DisplayEndTime: true, BgColor: 'Black', Color: 'White' },
+    Properties: { Text: '', Start: null, End: null, AllDay: false, Order: 0, EditMode: false, CssClass: '', BgColor: 'Black', Color: 'White' },
     Events: ['OnPropertyChanged', 'OnStartChanged', 'OnEndChanged', 'OnEventChanged', 'OnEventClick'],
 
     Map: {
         Text: 'title', Start: 'start', End: 'end', AllDay: 'allDay',
         EditMode: ['startEditable', 'durationEditable'],
-        DisplayStartTime: 'displayEventTime', DisplayEndTime: 'displayEventEnd',
         CssClass: 'classNames', BgColor: 'backgroundColor', Color: 'textColor', Order: 'order'
     },
 
