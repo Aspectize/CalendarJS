@@ -236,6 +236,7 @@ Aspectize.Extend("FullCalendar", {
 
             controlInfo.Rerender = function () {
 
+                fcObj.refetchEvents();
                 fcObj.render();
                 removeToolTips(elem);
             },
