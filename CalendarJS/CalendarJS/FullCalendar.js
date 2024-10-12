@@ -12,11 +12,16 @@ Aspectize.Extend("FullCalendar", {
 
     Init: function (elem, controlInfo) {
 
-        function getEvtHtml(title, timeText) {
+        function getEvtHtml(title, timeText, bgColor, txtColor) {
+
+            var styleList = [];
+            if(bgColor) styleList.push('background-color:' + bgColor + ';');
+            if (txtColor) styleList.push('color:' + txtColor + ';');
+            var styles = styleList.join('');
 
             var timePart = '<div class="fc-event-time">' + timeText + '</div>';
             var titlePart = '<div class="fc-event-title-container"><div class="fc-event-title fc-sticky">'+ title + '</div></div>';
-            var htmlEvt = '<div class="fc-event-main-frame">' + timePart + titlePart + '</div>';
+            var htmlEvt = '<div class="fc-event-main-frame" style="' + styles + '">' + timePart + titlePart + '</div>';
 
             return htmlEvt;
         }
@@ -119,12 +124,20 @@ Aspectize.Extend("FullCalendar", {
 
             eventOrder: eventSort,
             eventOrderStrict: true,
+            
+            eventDidMount :function (arg) {
+                if (arg.backgroundColor) arg.el.style.backgroundColor = arg.backgroundColor;
+                if (arg.textColor) arg.el.style.color = arg.textColor;
+            },
             eventContent: function (arg) {
+                var bgColor = arg.backgroundColor;
+                var txtColor = arg.textColor;
+                
 
                 var eventDisplayTime = Aspectize.UiExtensions.GetProperty(elem, 'EventDisplayTime');
 
                 var timeText = eventDisplayTime ? arg.timeText : '';
-                return { html: getEvtHtml(arg.event.title, timeText) };
+                return { html: getEvtHtml(arg.event.title, timeText, bgColor, txtColor) };
             }
         };
         //#endregion
@@ -485,6 +498,8 @@ Aspectize.Extend("CalendarEvent", {
 
                             } else evt[set](f, v);
                         }
+
+                        fcObj.refetchEvents();
                     }
                 }
             }
